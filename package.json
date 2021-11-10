@@ -1,0 +1,21 @@
+{
+  "name": "testManage",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "bcrypt": "^5.0.1",
+    "express": "^4.17.1",
+    "global": "^4.4.0",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.3.3-rc.0",
+    "node-cron": "^3.0.0",
+    "passport": "^0.5.0",
+    "passport-jwt": "^4.0.0",
+    "redis": "^3.1.2",
+    "request": "^2.88.2",
+    "sequelize": "^6.9.0",
+    "sequelize-cli": "^6.3.0"
+  }
+}
