@@ -61,7 +61,7 @@ module.exports = {
    * @returns {Object} {msg, statusCode, accessToken, refreshToken}
    */
   async localLogin(formData) {
-    const { dataValues: userInfo } = await User.findOne({
+    const userInfo = await User.findOne({
       where: { user_email: formData.user_email },
       attributes: [
         "user_id",
@@ -73,6 +73,8 @@ module.exports = {
       ],
     });
 
+    if (!userInfo) return { err: "User is not exist", code: 403 };
+
     const isMatchedPassword = bcrypt.compareSync(
       formData.user_password,
       userInfo.user_password
@@ -83,8 +85,11 @@ module.exports = {
     if (userInfo.user_isnotactive)
       return { err: "please release no active condition", code: 302 };
 
-    const accessToken = jwtMaker.generateToken({ ...userInfo }, true);
-    const refreshToken = jwtMaker.generateToken({ ...userInfo });
+    const accessToken = jwtMaker.generateToken(
+      { ...userInfo.dataValues },
+      true
+    );
+    const refreshToken = jwtMaker.generateToken({ ...userInfo.dataValues });
 
     try {
       client.setex(userInfo.user_id, 60 * 60 * 24, refreshToken); //exp time 24hours

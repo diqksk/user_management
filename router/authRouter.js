@@ -39,9 +39,9 @@ router.get("/google/callback", async (req, res) => {
 router.post("/login", async (req, res) => {
   const userForm = req.body;
 
-  if (!userForm.user_email.length)
+  if (!userForm.user_email)
     return res.status(400).send({ err: "Email is empty", code: 400 });
-  if (!userForm.user_password.length)
+  if (!userForm.user_password)
     return res.status(400).send({ err: "Password is empty", code: 400 });
 
   const loginResult = await authService.localLogin(userForm);

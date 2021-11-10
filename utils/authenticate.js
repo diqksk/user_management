@@ -17,7 +17,7 @@ const getRefreshToken = (user_id) => {
   });
 };
 
-/**
+/**TODO: Logout검증으로 refresh token 확인
  * Middle ware of authorization & authentication
  * @param {Number} accessibleRole Required role
  * @param {Boolean} isOnlyOwn Self auth check
@@ -83,6 +83,7 @@ const auth = (accessibleRole, isOnlyOwn) => {
       return res
         .status(401)
         .send({ err: "please insert additional information", code: 401 });
+
     if (decodedData.user_role < accessibleRole || decodedData.user_role === 1)
       return res.status(403).send({ err: "no permisson", code: 403 });
 

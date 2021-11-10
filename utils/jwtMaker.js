@@ -11,7 +11,6 @@ module.exports = {
   generateToken(userInfo, typeOfToken) {
     const ACCESS_EXP = Math.floor(Date.now() / 1000) + 60 * 60; // 1hour
     const REFRESH_EXP = Math.floor(Date.now() / 1000) + 60 * 60 * 24; // 24hours
-
     let payload = { user_id: userInfo.user_id };
 
     if (typeOfToken)

@@ -52,7 +52,6 @@ module.exports = {
     };
 
     if (user_email) whereOptions["user_email"] = { [Op.substring]: user_email };
-    console.log(whereOptions);
     const count = await User.count({
       where: whereOptions,
     });
@@ -127,7 +126,7 @@ module.exports = {
     return { msg: "update success", code: 200 };
   },
 
-  /**
+  /**TODO: 비동기처리
    * Logout
    * @param {*} user_id
    */

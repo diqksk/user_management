@@ -85,7 +85,7 @@ router.put("/", authenticate.userSelf, async (req, res) => {
   return res.status(result.code).send(result);
 });
 
-/**
+/** TODO: DELETE function 따로만들기
  * Exit account
  */
 router.delete("/", authenticate.userSelf, async (req, res) => {
