@@ -105,10 +105,10 @@ router.put("/stop", authenticate.admin, async (req, res) => {
   const { body: userForm } = req;
 
   if (!userForm.user_id)
-    return res.status(400).send({ err: "user data is requird" });
+    return res.status(400).send({ err: "user data is requird", code: 400 });
 
   if (userForm.user_role === 2)
-    return res.status(400).send({ err: "can't stop admin" });
+    return res.status(400).send({ err: "can't stop admin", code: 400 });
 
   const result = await userService.toggleStopedUser({ ...userForm });
 
@@ -118,7 +118,7 @@ router.put("/stop", authenticate.admin, async (req, res) => {
 /**
  * Release user freeze status
  */
-router.put("/stop", authenticate.userSelf, async (req, res) => {
+router.put("/release", authenticate.userSelf, async (req, res) => {
   const { body: userForm } = req;
 
   if (!userForm.user_id)
