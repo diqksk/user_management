@@ -122,7 +122,7 @@ router.put("/release", authenticate.userSelf, async (req, res) => {
   const { body: userForm } = req;
 
   if (!userForm.user_id)
-    return res.status(400).send({ err: "user data is requird" });
+    return res.status(400).send({ err: "user data is requird", code: 400 });
 
   const result = await userService.realeaseSleepingAccount({ ...userForm });
 
