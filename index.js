@@ -5,6 +5,10 @@ const models = require("./models");
 const auth = require("./router/authRouter");
 const userRouter = require("./router/userRouter");
 const scheduler = require("./utils/scheduler");
+const cors = require("cors");
+
+//Release cors
+app.use(cors({ origin: "localhost:3000", credentials: true }));
 
 //Use sequelize
 models.sequelize.sync();

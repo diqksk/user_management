@@ -13,11 +13,14 @@ const bcrypt = require("bcrypt");
  */
 const carculatePage = (totalPage, page, searchValue = "") => {
   if (page > totalPage) page = 1;
-  const endPage = totalPage > 10 ? Math.ceil(page / 10) + 9 : totalPage;
+  const fakeEndPage = totalPage > 10 ? Math.ceil(page / 10) * 10 : totalPage;
+  const endPage = fakeEndPage > totalPage ? totalPage : fakeEndPage;
   const startPage = endPage > 10 ? Math.floor(endPage / 10) * 10 + 1 : 1;
   const nextPage = endPage < totalPage ? true : false;
   const prevPage = page > 10 ? true : false;
-  const pageCount = endPage < 11 ? endPage : endPage - startPage;
+  const pageCount =
+    endPage < 11 ? endPage : endPage - startPage ? endPage - startPage + 1 : 1;
+
   const pageList = new Array(pageCount)
     .fill(startPage)
     .map((pageNum, idx) => pageNum + idx);
@@ -76,12 +79,14 @@ module.exports = {
 
     const rows = await User.findAll({
       attributes: [
+        "user_id",
         "user_email",
         "user_name",
         "user_social",
         "user_logindate",
         "user_role",
         "createdAt",
+        "user_stopdate",
       ],
       where: whereOptions,
       offset: Number((page - 1) * 20),
@@ -97,6 +102,23 @@ module.exports = {
         pagenation: carculatePage(totalPage, page, user_email),
       },
     };
+  },
+
+  /**
+   * Get user detail
+   * @param {String} user_id
+   * @returns {Object} {msg, code, data} or {err, code}
+   */
+  async getUserDetail(user_id) {
+    const userInfo = await User.findOne({
+      where: { user_id },
+    });
+
+    if (!userInfo) return { err: "User is not exist", code: 403 };
+
+    const { dataValues } = userInfo;
+
+    return { msg: "success", code: 200, data: dataValues };
   },
 
   /**
@@ -117,9 +139,9 @@ module.exports = {
       },
     });
 
-    if (!created) return { err: "이미 존재하는 회원입니다.", code: "409" };
+    if (!created) return { err: "Already exist email", code: "409" };
 
-    return { msg: "회원가입 완료!", code: "200" };
+    return { msg: "Sign up success", code: "200" };
   },
 
   /**
@@ -139,6 +161,53 @@ module.exports = {
     if (!result[0]) return { err: "update failed", code: 500 };
 
     return { msg: "update success", code: 200 };
+  },
+
+  /**
+   * Toggle stopped user status
+   * @param {Object} formData {user_id, user_stopdate}
+   * @returns {Object} {msg,code,data} or {err, code}
+   */
+  async toggleStopedUser(formData) {
+    const result = await User.update(
+      {
+        user_stopdate: formData.user_stopdate ? null : new Date(),
+        user_role: formData.user_role ? 0 : 1,
+      },
+      {
+        where: { user_id: formData.user_id },
+      }
+    );
+
+    if (!result[0]) return { err: "can't change stop status", code: 500 };
+
+    const userInfo = await User.findOne({
+      where: { user_id: formData.user_id },
+    });
+
+    const { dataValues } = userInfo;
+
+    return { msg: "changed success", code: 200, data: dataValues };
+  },
+
+  /**
+   * Realease sleeping account
+   * @param {Object} formData {user_id, user_stopdate}
+   * @returns {Object} {msg,code} or {err, code}
+   */
+  async realeaseSleepingAccount(formData) {
+    const result = await User.update(
+      {
+        user_isnotactive: 0,
+      },
+      {
+        where: { user_id: formData.user_id },
+      }
+    );
+
+    if (!result[0]) return { err: "can't release account", code: 500 };
+
+    return { msg: "changed success", code: 200 };
   },
 
   /**

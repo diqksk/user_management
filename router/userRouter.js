@@ -30,7 +30,7 @@ const isValid = (inputs) => {
 /**
  * Get user list
  */
-router.get("/", authenticate.admin, async (req, res) => {
+router.get("/", authenticate.user, async (req, res) => {
   const user_email = req.query.user_email;
   let page = req.query.page;
 
@@ -62,6 +62,19 @@ router.post("/", async (req, res) => {
 });
 
 /**
+ * Get User Detail
+ */
+router.get("/detail", authenticate.userSelf, async (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id || isNaN(user_id))
+    return res.status(400).send({ err: "invalid request", code: 400 });
+
+  const result = await userService.getUserDetail(user_id);
+  return res.status(result.code).send(result);
+});
+
+/**
  * Update account
  */
 router.put("/", authenticate.userSelf, async (req, res) => {
@@ -86,6 +99,37 @@ router.put("/", authenticate.userSelf, async (req, res) => {
 });
 
 /**
+ * Toggle user stopped status
+ */
+router.put("/stop", authenticate.admin, async (req, res) => {
+  const { body: userForm } = req;
+
+  if (!userForm.user_id)
+    return res.status(400).send({ err: "user data is requird" });
+
+  if (userForm.user_role === 2)
+    return res.status(400).send({ err: "can't stop admin" });
+
+  const result = await userService.toggleStopedUser({ ...userForm });
+
+  return res.status(result.code).send(result);
+});
+
+/**
+ * Release user freeze status
+ */
+router.put("/stop", authenticate.userSelf, async (req, res) => {
+  const { body: userForm } = req;
+
+  if (!userForm.user_id)
+    return res.status(400).send({ err: "user data is requird" });
+
+  const result = await userService.realeaseSleepingAccount({ ...userForm });
+
+  return res.status(result.code).send(result);
+});
+
+/**
  * Exit account
  */
 router.delete("/", authenticate.userSelf, async (req, res) => {
@@ -94,7 +138,7 @@ router.delete("/", authenticate.userSelf, async (req, res) => {
 
   const formData = { user_id, user_stopdate: new Date(), user_isdel: true };
 
-  const result = await userService.exitUser(formData);
+  const result = await userService.exitUser({ ...formData });
 
   return res.status(result.code).send(result);
 });

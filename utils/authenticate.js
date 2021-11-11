@@ -29,7 +29,7 @@ const auth = (accessibleRole, isOnlyOwn) => {
 
     //token 존재여부확인
     if (!req.headers.authorization)
-      return res.status(403).send({ err: "please login", code: 403 });
+      return res.status(403).send({ err: "please login", code: 401 });
 
     const token = req.headers.authorization.substr(7).trim();
 
@@ -37,7 +37,7 @@ const auth = (accessibleRole, isOnlyOwn) => {
     try {
       decodedData = jwt.isValidToken(token);
     } catch (e) {
-      return res.status(403).send({ err: "invalid token", code: 403 });
+      return res.status(403).send({ err: "invalid token", code: 401 });
     }
 
     //access, refresh 여부 판별
@@ -73,7 +73,7 @@ const auth = (accessibleRole, isOnlyOwn) => {
 
       return res
         .status(200)
-        .send({ msg: "issue new access token.", code: 200, accessToken });
+        .send({ msg: "issue new access token.", code: 201, accessToken });
     }
 
     //access token이면 권한검사
@@ -83,7 +83,7 @@ const auth = (accessibleRole, isOnlyOwn) => {
     if (decodedData.user_name === "기본이름")
       return res
         .status(302)
-        .send({ err: "please insert additional information", code: 302 });
+        .send({ err: "please insert additional information", code: 301 });
 
     //휴면계정으로 접근시 휴면계정 해제 페이지로 이동
     if (decodedData.user_isnotactive) {
@@ -94,18 +94,25 @@ const auth = (accessibleRole, isOnlyOwn) => {
     }
 
     //유저의 권한이 가능권한보다 낮거나 정지회원시 금지
-    if (decodedData.user_role < accessibleRole || decodedData.user_role === 1)
-      return res.status(403).send({ err: "no permisson", code: 403 });
+    if (decodedData.user_role < accessibleRole)
+      return res.status(401).send({ err: "no permisson", code: 401 });
+    else if (decodedData.user_role === 1)
+      return res.status(401).send({ err: "you are stopped user", code: 401 });
 
     //접근자가 자신인지 판별
+
     if (isOnlyOwn) {
+      const selfValid = req.query.user_id
+        ? req.query.user_id
+        : req.body.user_id;
+
       if (
         !(
-          decodedData.user_id === req.body.user_id ||
+          decodedData.user_id === Number(selfValid) ||
           decodedData.user_role === 2
         )
       )
-        return res.status(403).send({ err: "no permisson", code: 403 });
+        return res.status(401).send({ err: "no permisson", code: 401 });
     }
 
     return next();

@@ -43,6 +43,7 @@ module.exports = {
         code: 301,
         accessToken,
         refreshToken,
+        user_id: user.dataValues.user_id,
       };
 
     const user_logindate = new Date();
@@ -52,16 +53,22 @@ module.exports = {
       { where: { user_email: userInfo.email } }
     );
 
-    console.log(user.dataValues.user_isnotactive);
     if (user.dataValues.user_isnotactive)
       return {
         err: "please release no active condition",
         code: 302,
         accessToken,
         refreshToken,
+        user_id: user.dataValues.user_id,
       };
 
-    return { msg: "로그인 성공", code: 200, accessToken, refreshToken };
+    return {
+      msg: "로그인 성공",
+      code: 200,
+      accessToken,
+      refreshToken,
+      user_id: user.dataValues.user_id,
+    };
   },
 
   /**
@@ -91,6 +98,12 @@ module.exports = {
 
     if (!isMatchedPassword) return { err: "wrong password", code: 403 };
 
+    const accessToken = jwtMaker.generateToken(
+      { ...userInfo.dataValues },
+      true
+    );
+    const refreshToken = jwtMaker.generateToken({ ...userInfo.dataValues });
+
     if (userInfo.user_isnotactive)
       return {
         err: "please release no active condition",
@@ -99,25 +112,11 @@ module.exports = {
         refreshToken,
       };
 
-    const accessToken = jwtMaker.generateToken(
-      { ...userInfo.dataValues },
-      true
-    );
-    const refreshToken = jwtMaker.generateToken({ ...userInfo.dataValues });
-
     try {
       client.setex(userInfo.user_id, 60 * 60 * 24, refreshToken); //exp time 24hours
     } catch (e) {
       return { err: "token can't be stored", err: 500 };
     }
-
-    if (userInfo.user_name === "기본 이름")
-      return {
-        msg: "추가정보를 기입해주세요",
-        code: 200,
-        accessToken,
-        refreshToken,
-      };
 
     const user_logindate = new Date();
 
@@ -126,6 +125,12 @@ module.exports = {
       { where: { user_email: formData.user_email } }
     );
 
-    return { msg: "로그인 성공", code: 200, accessToken, refreshToken };
+    return {
+      msg: "login success",
+      code: 200,
+      accessToken,
+      refreshToken,
+      user_id: userInfo.user_id,
+    };
   },
 };
