@@ -52,6 +52,15 @@ module.exports = {
       { where: { user_email: userInfo.email } }
     );
 
+    console.log(user.dataValues.user_isnotactive);
+    if (user.dataValues.user_isnotactive)
+      return {
+        err: "please release no active condition",
+        code: 302,
+        accessToken,
+        refreshToken,
+      };
+
     return { msg: "로그인 성공", code: 200, accessToken, refreshToken };
   },
 
@@ -83,7 +92,12 @@ module.exports = {
     if (!isMatchedPassword) return { err: "wrong password", code: 403 };
 
     if (userInfo.user_isnotactive)
-      return { err: "please release no active condition", code: 302 };
+      return {
+        err: "please release no active condition",
+        code: 302,
+        accessToken,
+        refreshToken,
+      };
 
     const accessToken = jwtMaker.generateToken(
       { ...userInfo.dataValues },

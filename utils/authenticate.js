@@ -17,7 +17,7 @@ const getRefreshToken = (user_id) => {
   });
 };
 
-/**TODO: Logout검증으로 refresh token 확인
+/**
  * Middle ware of authorization & authentication
  * @param {Number} accessibleRole Required role
  * @param {Boolean} isOnlyOwn Self auth check
@@ -59,7 +59,7 @@ const auth = (accessibleRole, isOnlyOwn) => {
         return res.status(401).send({ err: "internal server err", code: 500 });
       }
 
-      //토큰불일치
+      //토큰 불일치
       if (token !== originalRefreshToken) {
         return res.status(401).send({ err: "invalid token", code: 401 });
       }
@@ -79,14 +79,25 @@ const auth = (accessibleRole, isOnlyOwn) => {
     //access token이면 권한검사
     console.log("accessToken");
 
+    //소셜로그인 추가정보 미기입시 추가정보 기입 페이지로 이동
     if (decodedData.user_name === "기본이름")
       return res
-        .status(401)
-        .send({ err: "please insert additional information", code: 401 });
+        .status(302)
+        .send({ err: "please insert additional information", code: 302 });
 
+    //휴면계정으로 접근시 휴면계정 해제 페이지로 이동
+    if (decodedData.user_isnotactive) {
+      return res.send(302).status({
+        err: "please release no active condition",
+        code: 302,
+      });
+    }
+
+    //유저의 권한이 가능권한보다 낮거나 정지회원시 금지
     if (decodedData.user_role < accessibleRole || decodedData.user_role === 1)
       return res.status(403).send({ err: "no permisson", code: 403 });
 
+    //접근자가 자신인지 판별
     if (isOnlyOwn) {
       if (
         !(

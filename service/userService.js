@@ -33,6 +33,21 @@ const carculatePage = (totalPage, page, searchValue = "") => {
     searchValue,
   };
 };
+/**
+ * Delete user data in redis
+ * @param {String} user_id
+ * @returns {Object} {msg,code} or {err,code}
+ */
+const deleteLoginData = (user_id) => {
+  return new Promise((resolve, reject) => {
+    client.get(user_id, (err, result) => {
+      if (err) return reject({ err: "can't logout", code: 500 });
+      if (!result) return resolve({ err: "user is not login", code: 500 });
+      client.del(user_id);
+      return resolve({ msg: "logout success", code: 200 });
+    });
+  });
+};
 
 module.exports = {
   /**
@@ -126,14 +141,24 @@ module.exports = {
     return { msg: "update success", code: 200 };
   },
 
-  /**TODO: 비동기처리
+  /**
+   * Exit user
+   * @param {String} user_id
+   * @returns {Object} {msg, code} or {err, code}
+   */
+  async exitUser(formData) {
+    const result = await User.update(formData, { where: user_id });
+    if (!result[0]) return { err: "can't exit", code: 500 };
+
+    return { msg: "exit done", code: 200 };
+  },
+
+  /**
    * Logout
    * @param {*} user_id
    */
   async logOut(user_id) {
-    client.get(user_id, (err, result) => {
-      if (err) throw new Error("로그아웃 할 수 없습니다", err);
-      client.del(user_id);
-    });
+    const result = await deleteLoginData(user_id);
+    return result;
   },
 };

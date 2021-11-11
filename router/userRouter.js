@@ -10,10 +10,10 @@ const authenticate = require("../utils/authenticate");
  */
 const isValid = (inputs) => {
   const regExp =
-    /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
+    /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i;
 
   if (!inputs.user_email) return { err: "Email is empty", code: 400 };
-  else if (!inputs.user_email.match(regExp))
+  else if (!regExp.test(inputs.user_email))
     return { err: "Email format is not valid", code: 400 };
 
   if (!inputs.user_password) return { err: "Password is empty", code: 400 };
@@ -85,14 +85,16 @@ router.put("/", authenticate.userSelf, async (req, res) => {
   return res.status(result.code).send(result);
 });
 
-/** TODO: DELETE function 따로만들기
+/**
  * Exit account
  */
 router.delete("/", authenticate.userSelf, async (req, res) => {
   const { user_id } = req.body;
+  if (!user_id) return res.status(400).send({ err: "user id is requird" });
+
   const formData = { user_id, user_stopdate: new Date(), user_isdel: true };
 
-  const result = await userService.updateUser(formData);
+  const result = await userService.exitUser(formData);
 
   return res.status(result.code).send(result);
 });
@@ -102,12 +104,12 @@ router.delete("/", authenticate.userSelf, async (req, res) => {
  */
 router.delete("/logout", authenticate.userSelf, async (req, res) => {
   const { user_id } = req.body;
-  try {
-    await userService.logOut(user_id);
-  } catch (e) {
-    return { err: "logout failed", code: 500 };
-  }
-  return { msg: "logout success", code: 200 };
+  if (!user_id)
+    return res.status(400).send({ err: "user id is required", code: 400 });
+
+  const result = await userService.logOut(user_id);
+
+  return res.status(result.code).send(result);
 });
 
 module.exports = router;
